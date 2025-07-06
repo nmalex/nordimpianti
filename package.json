@@ -1,0 +1,26 @@
+{
+  "name": "nordimpianti",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akhoroshylov/nordimpianti.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akhoroshylov/nordimpianti/issues"
+  },
+  "homepage": "https://github.com/akhoroshylov/nordimpianti#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
