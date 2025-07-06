@@ -1,12 +1,10 @@
-const express = require('express');
-const app = express();
-
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('Hello, world!');
-});
-
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-});
+/**
+ * A simple DigitalOcean function (Node.js)
+ * Responds with "Hello from DigitalOcean Function!"
+ */
+module.exports = async function (context) {
+  return {
+    statusCode: 200,
+    body: "Hello from DigitalOcean Function!",
+  };
+};

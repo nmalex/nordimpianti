@@ -1,0 +1,7 @@
+---
+packages:
+  - name: functions
+    functions:
+      - name: hello
+        runtime: nodejs:default
+        source: ./hello
