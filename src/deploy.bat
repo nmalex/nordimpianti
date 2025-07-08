@@ -1,0 +1,1 @@
+%cd%\../.bin/doctl.exe serverless deploy .

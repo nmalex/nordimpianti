@@ -4,14 +4,30 @@
     "namespace": "fn-cc862375-8740-4e17-bd3e-7bfe3aaf577b",
     "packageVersions": {
       "functions": {
-        "version": "0.0.1",
-        "digest": "3cc4c19b4c73f248772989abed4bcaedc98243ec8d6a1fe06ed1700eb2f7e70a"
+        "version": "0.0.165",
+        "digest": "07f22ca4f0921a2fc01ef8a7d71ffa800ce2731d904670764ce2e3ff087d7ed8"
       }
     },
     "actionVersions": {
-      "functions/hello": {
-        "version": "0.0.1",
-        "digest": "2d2a67e02e835ab2bc0f93fea31f4ede770daefc476c7fd29502d74e9303defb"
+      "functions/oauth-callback": {
+        "version": "0.0.9",
+        "digest": "28c3be40b6f01ed022770ea7a9981c225ac832ac53f40c2671c93c50c142ba52"
+      },
+      "functions/oauth-refresh": {
+        "version": "0.0.9",
+        "digest": "f7fc67b2cc27c24f1b5be5fb5416992a67505df023f5184ab6605634944ee0c3"
+      },
+      "functions/oauth-start": {
+        "version": "0.0.154",
+        "digest": "094fce5a13e04071d6100944b19360116be0db5cda2d46a0616b94da7c373436"
+      },
+      "functions/organization": {
+        "version": "0.0.65",
+        "digest": "3eeb722ec97610fa30328693fbb2254759f0f81d00198d0b2f7ae0ef16a04cb0"
+      },
+      "functions/quote": {
+        "version": "0.0.49",
+        "digest": "aa7c22e0095fedff380824eaeaddad31e5902ec560f03dca203dc65890eb863e"
       }
     }
   }

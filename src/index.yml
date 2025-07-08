@@ -5,3 +5,9 @@ packages:
       - name: hello
         runtime: nodejs:default
         source: ./hello
+      - name: oauth-start
+        runtime: nodejs:default
+        source: ./oauth-start
+      - name: oauth-callback
+        runtime: nodejs:default
+        source: ./oauth-callback
