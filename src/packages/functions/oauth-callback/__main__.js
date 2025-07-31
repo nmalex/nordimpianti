@@ -19,12 +19,18 @@ exports.main = async function (args) {
     if (!accountsServer) {
       return { statusCode: 400, body: 'Missing accounts-server' };
     }
+    const format = args['format'] || args.query && args.query['format'];
+    const isJsonOutput = format == 'json';
+    let redirectUri = `${config.DigitalOceanFunctionUrl}/functions/oauth-callback`;
+    if (isJsonOutput) {
+      redirectUri += `?format=json`;
+    }
 
     const params = new URLSearchParams({
       code,
       client_id: config.ZohoClientID,
       client_secret: config.ZohoSecret,
-      redirect_uri: `${config.DigitalOceanFunctionUrl}/functions/oauth-callback`,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code'
     });
 
@@ -41,6 +47,29 @@ exports.main = async function (args) {
 
       const refreshUrl = `${DO}?refresh-token=${data.refresh_token}&accounts-server=${accountsServer}`;
       const refreshUrlEl = `<a href=\"${refreshUrl}\">link</a>`;
+
+      if (isJsonOutput) {
+        const meta = {
+          oauth: {
+            "access-token": data.access_token,
+            "refresh-token": data.refresh_token,
+            "accounts-server": accountsServer,
+            "refresh-url": refreshUrl,
+          }
+        };
+        let metaText = JSON.stringify(meta);
+        const obj = {
+          text: "meta: " + metaText,
+          meta,
+        };
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: obj,
+        };
+      }
 
       let html = '';
       // render html page

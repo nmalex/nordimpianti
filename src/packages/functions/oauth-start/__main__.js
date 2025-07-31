@@ -1,5 +1,5 @@
 // shared config hardcoded for visibility
-const config = 
+const config =
 {
 	"crm_api_url":             "https://crm.zoho.eu/crm/v2",
   "DigitalOceanFunctionUrl": "",
@@ -9,7 +9,14 @@ const config =
 
 exports.main = async function (args) {
   try {
-    const redirectUri = `${config.DigitalOceanFunctionUrl}/functions/oauth-callback`;
+    const format = args['format'] || args.query && args.query['format'];
+    const isJsonOutput = format == 'json';
+
+    let redirectUri = `${config.DigitalOceanFunctionUrl}/functions/oauth-callback`;
+    if (isJsonOutput)
+    {
+      redirectUri += '?format=json';
+    }
 
     const authUrl = new URL('https://accounts.zoho.com/oauth/v2/auth');
     authUrl.searchParams.set('client_id', config.ZohoClientID);

@@ -13,6 +13,8 @@ exports.main = async function (args) {
   try {
     const refreshToken = args['refresh-token'] || args.query && args.query['refresh-token'];
     const accountsServer = args['accounts-server'] || args.query && args.query['accounts-server'];
+    const format = args['format'] || args.query && args.query['format'];
+    const isJsonOutput = format == 'json';
 
     if (!refreshToken) {
       return { statusCode: 400, body: 'Missing refresh token' };
@@ -39,8 +41,25 @@ exports.main = async function (args) {
 
     const DO = `${config.DigitalOceanFunctionUrl}/functions/oauth-refresh`;
     if (data.access_token) {
+
       const refreshUrl = `${DO}?refresh-token=${refreshToken}&accounts-server=${accountsServer}`;
       const refreshUrlEl = `<a href=\"${refreshUrl}\">link</a>`;
+
+      if (isJsonOutput) {
+
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: {
+            access_token: data.access_token,
+            refresh_token: refreshToken,
+            accounts_server: accountsServer,
+            refresh_url: refreshUrl,
+          },
+        };
+      }
 
       let html = '';
       // render html page

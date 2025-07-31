@@ -4,30 +4,38 @@
     "namespace": "fn-cc862375-8740-4e17-bd3e-7bfe3aaf577b",
     "packageVersions": {
       "functions": {
-        "version": "0.0.165",
-        "digest": "07f22ca4f0921a2fc01ef8a7d71ffa800ce2731d904670764ce2e3ff087d7ed8"
+        "version": "0.0.308",
+        "digest": "a1cb6b5915cdf9e0e08ceb8c738638759198b404ff367e3c60ca63b3c4679183"
       }
     },
     "actionVersions": {
+      "functions/attachment": {
+        "version": "0.0.23",
+        "digest": "1ce554caadcd94d8f4c0e65a900664feb508c27b452a1073ab810202987c62bf"
+      },
       "functions/oauth-callback": {
-        "version": "0.0.9",
-        "digest": "28c3be40b6f01ed022770ea7a9981c225ac832ac53f40c2671c93c50c142ba52"
+        "version": "0.0.152",
+        "digest": "be16e111fb3491ef98cef1f644d86e05302a2ab66c86c33b971bb801249967d6"
       },
       "functions/oauth-refresh": {
-        "version": "0.0.9",
-        "digest": "f7fc67b2cc27c24f1b5be5fb5416992a67505df023f5184ab6605634944ee0c3"
+        "version": "0.0.152",
+        "digest": "3fd1c1a846a71b2b3dfc2a7eff7a7b415b1df72c9144cad15ac49428286d5bef"
       },
       "functions/oauth-start": {
-        "version": "0.0.154",
-        "digest": "094fce5a13e04071d6100944b19360116be0db5cda2d46a0616b94da7c373436"
+        "version": "0.0.297",
+        "digest": "6fbfda9b9c4747eb4cbf970be0ca5053478e95f040e6c2d056d69474981d67df"
       },
       "functions/organization": {
-        "version": "0.0.65",
+        "version": "0.0.208",
         "digest": "3eeb722ec97610fa30328693fbb2254759f0f81d00198d0b2f7ae0ef16a04cb0"
       },
+      "functions/product": {
+        "version": "0.0.143",
+        "digest": "8d966b86d2628a626cbb100360f06be930d982ff7858cbedb1dfd1e235799c27"
+      },
       "functions/quote": {
-        "version": "0.0.49",
-        "digest": "aa7c22e0095fedff380824eaeaddad31e5902ec560f03dca203dc65890eb863e"
+        "version": "0.0.192",
+        "digest": "84e2f4aa5e9edb2bc13e38101f98869b0f74097582830d017828237a8fd6e044"
       }
     }
   }
