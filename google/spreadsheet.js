@@ -50,6 +50,26 @@ function getRefreshUrl()
   }
 }
 
+function refreshToken()
+{
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const oauthSheet = ss.getSheetByName('OAuth');
+  if (!oauthSheet) {
+    Logger.log("Can't get OAuth sheet");
+    return;
+  }
+
+  let refreshUrl = getRefreshUrl();
+  refreshUrl = refreshUrl + '&format=json';
+
+  const response = UrlFetchApp.fetch(refreshUrl);
+  const data = JSON.parse(response.getContentText());
+  Logger.log(data);
+
+  const tokenCell = oauthSheet.getRange('B1'); // in B1 we expect to see the valid token
+  tokenCell.setValue(data.access_token);
+}
+
 function createSheetWithName(sheetName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -96,57 +116,81 @@ function formatLastRow(sheet, row_style, currency_symbol)
     const lastRow = sheet.getLastRow(); // index of last row
     for (let i = 0; i < row_style.length; i++)
     {
-      if (row_style[i] == 'text') continue;
-
       const columnI = numberToColumnLetter(i+1);
       const range = `${columnI}${lastRow}`;
       Logger.log(JSON.stringify(range));
       const cell = sheet.getRange(range); // Change to your target cell
-      if (row_style[i] == 'currency_symbol')
+      if (row_style[i] == 'text')
+      {
+        cell.clearFormat();
+      }
+      else if (row_style[i] == 'currency_symbol')
       {
         cell.setNumberFormat(`${currency_symbol}#,##0.00`);
       }
       else if (row_style[i] == '0.00')
       {
         cell.setNumberFormat('0.00');
+      } 
+      else
+      {
+        cell.clearFormat();
       }
     }
 }
 
-function insertJSONDataFromURL(lastName) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const quoteInfo = getCellValue(sheet, 'A1');
+function loadData(quoteInfo, isRU)
+{
+  const token = getOAuthToken();
+  if (!token)
+  {
+    Logger.log("Missing OAuth token");
+    return;
+  }
 
   let idStr = '';
+  let numberStr = '';
   let quoteId = 0;
+  let quoteNumber = 0;
+  let url = '';
+
   if (quoteInfo.toString().startsWith('https://'))
   {
     // we've got raw url and can extract quote id
     const parts = quoteInfo.toString().split('/');
     idStr = parts[parts.length - 1];
+    if (idStr.match(/^-?\d+$/)) //valid integer (positive or negative)
+    {
+      quoteId = idStr;
+    }
+    if (isNaN(quoteId) || quoteId == 0 || !quoteId)
+    {
+      Logger.log("A1 has no valid quote id");
+      return;
+    }
+    url = 'https://faas-fra1-afec6ce7.doserverless.co/api/v1/web/fn-cc862375-8740-4e17-bd3e-7bfe3aaf577b/functions/quote'
+          +`?id=${quoteId}&token=${token}&ru=${isRU}`;
   }
   else if (quoteInfo.toString().match(/^-?\d+$/)) //valid integer (positive or negative)
   {
-    idStr = quoteInfo.toString();
+    numberStr = quoteInfo.toString();
+    if (numberStr.match(/^-?\d+$/)) //valid integer (positive or negative)
+    {
+      quoteNumber = numberStr;
+    }
+    if (isNaN(quoteNumber) || quoteNumber == 0 || !quoteNumber)
+    {
+      Logger.log("A1 has no valid quote number");
+      return;
+    }
+    url = 'https://faas-fra1-afec6ce7.doserverless.co/api/v1/web/fn-cc862375-8740-4e17-bd3e-7bfe3aaf577b/functions/quote'
+          +`?number=${quoteNumber}&token=${token}&ru=${isRU}`;
+  } else {
+      Logger.log("A1 must have valid quote number or URL on quote in CRM");
+      return;
   }
-
-  if (idStr.match(/^-?\d+$/)) //valid integer (positive or negative)
-  {
-    quoteId = idStr;
-  }
-
-  if (isNaN(quoteId) || quoteId == 0 || !quoteId)
-  {
-    Logger.log("A1 has no valid quote");
-    return;
-  }
-
-  const token = getOAuthToken();
 
   Logger.log("fetching URL: ");
-
-  const url = 'https://faas-fra1-afec6ce7.doserverless.co/api/v1/web/fn-cc862375-8740-4e17-bd3e-7bfe3aaf577b/functions/quote'
-  +`?id=${quoteId}&token=${token}`;
   Logger.log(url);
 
   const response = UrlFetchApp.fetch(url);
@@ -157,14 +201,28 @@ function insertJSONDataFromURL(lastName) {
     throw new Error("Expected JSON array of objects");
   }
 
+  return jsonData;
+}
+
+function insertJSONDataFromURL(isRU) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const quoteInfo = getCellValue(sheet, 'A1');
+  const jsonData = loadData(quoteInfo, isRU);
+
   // Clear old data
   sheet.clearContents();
   setCellValue(sheet, 'A1', quoteInfo);
 
   // Write headers
-  const headers = ['id','name', 'quantity', 'list_price',	'total']; // Object.keys(jsonData[0]);
-  const priceColumns = ['list_price', 'total'];
-  const sumColumns = ['total'];
+  const headers = ['id', 'product_id', 'type', 'name', 'quantity', 'list_price', 'amount', 'k', 'unit_price', 'net_total'];
+  const headersLocalized = (!isRU)
+    ? ['#', 'id', 'Type',    'Name',        'Quantity',  'List Price', 'Amount', 'K', 'Unit Price',      'Total']
+    : ['№', 'id', 'Тип', 'Наименование', 'Количество',    'Цена',     'Сумма', 'K', 'Стоимость (ед.)', 'Стоимость'];
+
+  const priceColumns = ['list_price', 'amount', 'unit_price', 'net_total'];
+  const intColumns = ['k'];
+  const quantityColumns = ['quantity'];
+  const sumColumns = ['net_total'];
 
   // Write rows that come straight
   for (let i = 0; i < jsonData.length; i++) {
@@ -176,7 +234,7 @@ function insertJSONDataFromURL(lastName) {
   sheet.appendRow([' ',' ',' ',' ']); // add empty row
 
   // write headers
-  sheet.appendRow(headers);
+  sheet.appendRow(headersLocalized);
 
   let row_sums = new Array(headers.length).fill(0);
   let row_style = [];
@@ -190,40 +248,57 @@ function insertJSONDataFromURL(lastName) {
       continue;
     } // skip array rows, as they are already added before
     
-    Logger.log(JSON.stringify(obj));
+    // Logger.log(JSON.stringify(obj));
     let row = [];
     row_style = [];
 
     for (let i = 0; i < headers.length; i++)
     {
       const propName = headers[i];
+      let propValue = obj[propName];
 
-      const propValue = obj[propName];
-      row.push(propValue);
-
-      // collect sum for some rows
-      if (sumColumns.indexOf(propName) != -1)
+      const isGroup = obj.type == "Group";
       {
-        row_sums[i] += propValue;
-      } else {
-        row_sums[i] = ''; // no sum for this row
-      }
-
-      // remember necessary formatting for some rows
-      if (priceColumns.indexOf(propName) != -1)
-      {
-        if (!currency_symbol) {
-          currency_symbol = obj['currency_symbol'];
-        }
-        if (currency_symbol) {
-          row_style.push('currency_symbol');
+        // collect sum for some rows
+        if (sumColumns.indexOf(propName) != -1)
+        {
+          if (!isGroup) {
+            row_sums[i] += propValue;
+          }
         } else {
-          row_style.push('0.00');
+          row_sums[i] = ''; // no sum for this row
         }
-      } else {
-        row_style.push('text');
-      }
 
+        // modify for units of measurement
+        if (quantityColumns.indexOf(propName) != -1)
+        {
+          propValue = obj.usage_unit ? `${propValue} ${obj.usage_unit}` : propValue;
+        }
+
+        // remember necessary formatting for some rows
+        if (intColumns.indexOf(propName) != -1)
+        {
+          row_style.push('0');
+        }
+        else if (quantityColumns.indexOf(propName) != -1)
+        {
+          row_style.push('text');
+        }
+        else if (priceColumns.indexOf(propName) != -1)
+        {
+          if (!currency_symbol) {
+            currency_symbol = obj['currency_symbol'];
+          }
+          if (currency_symbol) {
+            row_style.push('currency_symbol');
+          } else {
+            row_style.push('0.00');
+          }
+        } else {
+          row_style.push('text');
+        }
+        row.push(propValue);
+      }
     }
     sheet.appendRow(row);
     formatLastRow(sheet, row_style, currency_symbol);
@@ -234,14 +309,30 @@ function insertJSONDataFromURL(lastName) {
   formatLastRow(sheet, row_style, currency_symbol);
 }
 
+function insertJSONDataFromURL_EN() {
+  insertJSONDataFromURL(false);
+}
+
+function insertJSONDataFromURL_RU() {
+  insertJSONDataFromURL(true);
+}
+
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Nordimpianti')
-    .addItem('Authenticate', 'startOAuth')
-    .addItem('Keep Alive', 'refreshOAuth')
+    .addItem('Load Quote # (EN)', 'insertJSONDataFromURL_EN')
+    .addItem('Load Quote # (RU)', 'insertJSONDataFromURL_RU')
     .addSeparator()
-    .addItem('Load Quote #', 'insertJSONDataFromURL')
+    .addItem('Authenticate', 'startOAuth')
+    .addItem('Keep Alive', 'refreshToken')
     .addToUi();
+
+  refreshToken();
+}
+
+function onHalfHourTrigger()
+{
+  refreshToken();
 }
 
 function onEditTrigger(e) {
