@@ -24,7 +24,7 @@ function replaceInAllHeadersAndFooters(placeholder, replacement) {
   }
 }
 
-function replaceInElement(container, searchText, replacementText) {
+function replaceInElement(container, searchText, replaceText) {
   const numChildren = container.getNumChildren();
 
   for (let i = 0; i < numChildren; i++) {
@@ -34,17 +34,19 @@ function replaceInElement(container, searchText, replacementText) {
         element.getType() === DocumentApp.ElementType.TABLE_CELL) {
 
       const text = element.asText();
-      const index = text.getText().indexOf(searchText);
+      const t = text.getText();
+      const index = t.indexOf(searchText);
       if (index !== -1) {
+        Logger.log(`Replacing in ${t}: ${searchText} by ${replaceText}`);
         text.deleteText(index, index + searchText.length - 1);
-        text.insertText(index, replacementText);
+        text.insertText(index, replaceText);
       }
     } else if (element.getType() === DocumentApp.ElementType.TABLE) {
       const table = element.asTable();
       for (let r = 0; r < table.getNumRows(); r++) {
         const row = table.getRow(r);
         for (let c = 0; c < row.getNumCells(); c++) {
-          replaceInElement(row.getCell(c), searchText, replacementText);
+          replaceInElement(row.getCell(c), searchText, replaceText);
         }
       }
     }
@@ -54,17 +56,17 @@ function replaceInElement(container, searchText, replacementText) {
 function replaceAll(searchText, replaceText) {
   const doc = DocumentApp.getActiveDocument();
   const body = doc.getBody();
-
-  // try replace in header and footer first
-  replaceInAllHeadersAndFooters(searchText, replaceText);
-
   const paragraphs = body.getParagraphs();
 
   for (const paragraph of paragraphs) {
-    if (paragraph.getText().includes(searchText)) {
+    const t = paragraph.getText();
+    if (t.includes(searchText)) {
+      Logger.log(`Replacing in ${t}: ${searchText} by ${replaceText}`);
       paragraph.replaceText(searchText, replaceText);
     }
   }
+
+  replaceInAllHeadersAndFooters(searchText, replaceText);
 }
 
 function replaceParagraph(targetText, replaceText, canRemove) {
@@ -482,15 +484,17 @@ function startLoadQuote(quoteNumber, isRU)
     return;
   }
 
-  replaceAll('${Quote.Quote_Number}', rawQuote.Quote_Number);
-  replaceAll('${Quote.Account_Name.name}', rawQuote.Account_Name.name);
-  replaceAll('${Quote.Billing_City}', rawQuote.Billing_City);
-  replaceAll('${Quote.Billing_Country}', rawQuote.Billing_Country);
-  replaceAll('${Quote.Created_Time}', extractDateFromIso(rawQuote.Created_Time));
-  replaceAll('${Quote.Production_Time}', rawQuote.Production_Time);
-  replaceAll('${Quote.Carrier}', rawQuote.Carrier);
-  replaceAll('${Quote.Delivery_place}', rawQuote.Delivery_place);
-  replaceAll('${Quote.Valid_Till}', rawQuote.Valid_Till);
+  replaceAll('{{Quote.Quote_Number}}', rawQuote.Quote_Number);
+  replaceAll('{{Quote.Account_Name.name}}', rawQuote.Account_Name.name);
+  replaceAll('{{Quote.Billing_City}}', rawQuote.Billing_City);
+  replaceAll('{{Quote.Billing_Country}}', rawQuote.Billing_Country);
+  replaceAll('{{Quote.Created_Time}}', extractDateFromIso(rawQuote.Created_Time));
+  replaceAll('{{Quote.Production_Time}}', rawQuote.Production_Time);
+  replaceAll('{{Quote.Carrier}}', rawQuote.Carrier);
+  replaceAll('{{Quote.Delivery_place}}', rawQuote.Delivery_place);
+  replaceAll('{{Quote.Valid_Till}}', rawQuote.Valid_Till);
+
+  return;
 
   const token = getOAuthToken();
 
